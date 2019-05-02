@@ -43,7 +43,7 @@ class Game(startPageTitle: String, val targetPageTitle: String) {
         return true
     }
 
-    fun getNextPageOfLinks() {
+    fun getNextPageOfLinks(): Boolean {
         val plcont = plcontinueList.getOrNull(linkPageNumber)
         if (plcont != null) {
             val (links, plcontinue) = Wikipedia.fetchPageLinks(currentPageTitle, plcont)
@@ -54,19 +54,60 @@ class Game(startPageTitle: String, val targetPageTitle: String) {
                 if (plcontinue != null && plcontinue.isNotBlank()) {
                     plcontinueList.add(plcontinue)
                 }
+                return true
             }
         }
+        return false
     }
 
-    fun getPreviousPageOfLinks() {
+    fun getPreviousPageOfLinks(): Boolean {
         if (linkPageNumber > 0) {
             val plcont = plcontinueList.getOrNull(linkPageNumber - 2)
             val (links, _) = Wikipedia.fetchPageLinks(currentPageTitle, plcont)
             currentLinks.clear()
             currentLinks.addAll(links)
             linkPageNumber--
+            return true
+        }
+        return false
+    }
+
+    fun goBack() {
+        path.getOrNull(path.size - 2)?.let { back ->
+            currentPageTitle = back
+            path.removeAt(path.indices.last)
+            updateLinksForNewPage()
         }
     }
+
+    fun skipTo(letter: Char): Boolean {
+        var i = 0
+
+        while (maxLetter()!! < letter && getNextPageOfLinks()) i++
+        while (minLetter()!! > letter && getPreviousPageOfLinks()) i--
+
+        if (!atLetter(letter)) {
+            while (i < 0) {
+                getNextPageOfLinks()
+                i++
+            }
+            while (i > 0) {
+                getPreviousPageOfLinks()
+                i--
+            }
+            return false
+        }
+        return true
+    }
+
+    private fun maxLetter(): Char? =
+        currentLinks.lastOrNull()?.first()?.toLowerCase()
+
+    private fun minLetter(): Char? =
+        currentLinks.firstOrNull()?.first()?.toLowerCase()
+
+    private fun atLetter(letter: Char): Boolean =
+        currentLinks.any { it.startsWith(letter, ignoreCase = true) }
 
     private fun updateLinksForNewPage() {
         linkPageNumber = 0

@@ -24,6 +24,8 @@ class WikipediaRaceTelegramBot(private val token: String) {
                 command("next") { bot, update -> tryCommand(bot, update, ::doNextPageOfLinksCommand) }
                 command("prev") { bot, update -> tryCommand(bot, update, ::doPreviousPageOfLinksCommand) }
                 command("pick") { bot, update -> tryCommand(bot, update, ::doPickCommand) }
+                command("back") { bot, update -> tryCommand(bot, update, ::doBackCommand) }
+                command("skipto") { bot, update -> tryCommand(bot, update, ::doSkipToCommand) }
             }
         }.startPolling()
     }
@@ -116,6 +118,41 @@ class WikipediaRaceTelegramBot(private val token: String) {
             return
         }
 
+        handleGame(bot, chatId, message.messageId, game)
+    }
+
+    private fun doBackCommand(bot: Bot, update: Update) {
+        val message = update.message!!
+        val chatId = message.chat.id
+        val game = games[chatId]
+        if (game == null) {
+            bot.sendMessage(chatId, NO_GAME_IN_PROGRESS, replyToMessageId = message.messageId)
+            return
+        }
+
+        game.goBack()
+        handleGame(bot, chatId, message.messageId, game)
+    }
+
+    private fun doSkipToCommand(bot: Bot, update: Update) {
+        val message = update.message!!
+        val chatId = message.chat.id
+        val game = games[chatId]
+        if (game == null) {
+            bot.sendMessage(chatId, NO_GAME_IN_PROGRESS, replyToMessageId = message.messageId)
+            return
+        }
+
+        val command = message.entities!![0]
+        val letter = message.text!!.substring(command.offset + command.length).trim()
+            .takeIf { it.length == 1 && it[0].isLetterOrDigit() }?.get(0)
+        if (letter == null) {
+            bot.sendMessage(chatId, "Please provide a letter or digit to skip to.",
+                replyToMessageId = message.messageId)
+            return
+        }
+
+        game.skipTo(letter)
         handleGame(bot, chatId, message.messageId, game)
     }
 
