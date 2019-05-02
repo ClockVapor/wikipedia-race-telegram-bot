@@ -7,6 +7,7 @@ import me.ivmg.telegram.Bot
 import me.ivmg.telegram.bot
 import me.ivmg.telegram.dispatch
 import me.ivmg.telegram.dispatcher.command
+import me.ivmg.telegram.entities.ChatAction
 import me.ivmg.telegram.entities.Update
 import okhttp3.logging.HttpLoggingInterceptor
 
@@ -28,8 +29,9 @@ class WikipediaRaceTelegramBot(private val token: String) {
     }
 
     private fun tryCommand(bot: Bot, update: Update, action: (Bot, Update) -> Unit) {
+        val message = update.message!!
+        bot.sendChatAction(message.chat.id, ChatAction.TYPING)
         if (!trySuccessful(reportException = true) { action(bot, update) }) {
-            val message = update.message!!
             bot.sendMessage(message.chat.id, "<an error occurred>", replyToMessageId = message.messageId)
         }
     }
