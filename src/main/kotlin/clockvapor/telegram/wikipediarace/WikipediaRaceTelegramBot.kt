@@ -144,15 +144,14 @@ class WikipediaRaceTelegramBot(private val token: String) {
         }
 
         val command = message.entities!![0]
-        val letter = message.text!!.substring(command.offset + command.length).trim()
-            .takeIf { it.length == 1 && it[0].isLetterOrDigit() }?.get(0)
-        if (letter == null) {
-            bot.sendMessage(chatId, "Please provide a letter or digit to skip to.",
+        val skipSubject = message.text!!.substring(command.offset + command.length).trim()
+        if (skipSubject.isBlank()) {
+            bot.sendMessage(chatId, "Please provide the beginning portion of a link title to skip to.",
                 replyToMessageId = message.messageId)
             return
         }
 
-        game.skipTo(letter)
+        game.skipTo(skipSubject)
         handleGame(bot, chatId, message.messageId, game)
     }
 

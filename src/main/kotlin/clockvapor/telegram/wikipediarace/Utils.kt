@@ -3,6 +3,8 @@ package clockvapor.telegram.wikipediarace
 import java.net.HttpURLConnection
 import java.net.URL
 import java.net.URLEncoder
+import kotlin.math.max
+import kotlin.math.min
 
 fun encodeUrlArgument(value: String): String = URLEncoder.encode(value, "UTF-8")
 
@@ -32,4 +34,12 @@ inline fun <T> tryUrlAction(url: URL, action: () -> T): T = try {
     action()
 } catch (e: Exception) {
     throw RuntimeException("Failed to access URL: $url", e)
+}
+
+/** Only compares the intersecting parts of the two strings. */
+fun String.goodCompare(other: String): Int {
+    val maxLength = max(length, other.length)
+    val thisTrim = substring(0, min(length, maxLength - 1))
+    val otherTrim = other.substring(0, min(other.length, maxLength - 1))
+    return thisTrim.compareTo(otherTrim, ignoreCase = true)
 }

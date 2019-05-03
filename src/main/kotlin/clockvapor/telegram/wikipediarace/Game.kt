@@ -80,13 +80,17 @@ class Game(startPageTitle: String, val targetPageTitle: String) {
         }
     }
 
-    fun skipTo(letter: Char): Boolean {
+    fun skipTo(skipSubject: String): Boolean {
         var i = 0
 
-        while (maxLetter()!! < letter && getNextPageOfLinks()) i++
-        while (minLetter()!! > letter && getPreviousPageOfLinks()) i--
+        while (maxLink()!!.goodCompare(skipSubject) < 0 && getNextPageOfLinks()) {
+            i++
+        }
+        while (minLink()!!.goodCompare(skipSubject) > 0 && getPreviousPageOfLinks()) {
+            i--
+        }
 
-        if (!atLetter(letter)) {
+        if (!atSubject(skipSubject)) {
             while (i < 0) {
                 getNextPageOfLinks()
                 i++
@@ -100,14 +104,14 @@ class Game(startPageTitle: String, val targetPageTitle: String) {
         return true
     }
 
-    private fun maxLetter(): Char? =
-        currentLinks.lastOrNull()?.first()?.toLowerCase()
+    private fun maxLink(): String? =
+        currentLinks.lastOrNull()
 
-    private fun minLetter(): Char? =
-        currentLinks.firstOrNull()?.first()?.toLowerCase()
+    private fun minLink(): String? =
+        currentLinks.firstOrNull()
 
-    private fun atLetter(letter: Char): Boolean =
-        currentLinks.any { it.startsWith(letter, ignoreCase = true) }
+    private fun atSubject(subject: String): Boolean =
+        currentLinks.any { it.startsWith(subject, ignoreCase = true) }
 
     private fun updateLinksForNewPage() {
         linkPageNumber = 0
